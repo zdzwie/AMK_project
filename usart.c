@@ -124,6 +124,8 @@ char c;
 		  
 		if(RingBuffer_GetChar(&USART_RingBuffer_Tx,&c)){
 			USARTx->DR = c;
+		} else {
+			__USART_DISABLE_IT(&UartHandle, USART_IT_TXE);
 		}
 	  }
   }
@@ -224,4 +226,3 @@ bool USART_Init(void){
 	
 	return true;
 }
-

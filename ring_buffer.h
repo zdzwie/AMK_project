@@ -7,13 +7,12 @@
 
 /** Structure describing the ring buffer. */
 typedef struct {
-
-	uint16_t buffer_size;
-	char * data_pointer;
-	uint8_t startnr;
-	uint8_t endnr;
-	uint16_t counter;
-
+	/// Compose your structure here!
+	uint16_t head;
+	uint16_t tail;
+	size_t numOfElem;
+	char* buff;
+	bool fullFlag;
 } RingBuffer;
 
 
@@ -79,5 +78,3 @@ bool RingBuffer_GetChar(RingBuffer *ringBuffer, char *c);
 
 
 #endif //_RING_BUFFER_
-
-

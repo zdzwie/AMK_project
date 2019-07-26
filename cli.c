@@ -10,6 +10,8 @@ static CLI_CommandItem *head = NULL;
 // char buffer where command will be stored
 static char commandBuffer[100];
 
+uint8_t i = 0;
+
 /**
  * This function searches the CLI command list and tries to find a descriptor for the provided command.
  * The command format is case-insensitive.
@@ -44,56 +46,102 @@ static bool CLI_StoreCommand(void);
  * @param dst pointer where converted null terminated string will be stored
  * @param src pointer to string which will be converted
  */
-static void CLI_StringToLower(char *dst, const char *src);
+static void CLI_StringToUpper(char *dst, const char *src);
 	
 	
 	
 void CLI_Proc(void){
-	//todo
+	
+	if(CLI_StoreCommand() && strlen(commandBuffer)){
+		char *args;
+		args = strchr(commandBuffer, ' ');
+		if(args!=NULL){
+				*args='\0';
+				args++; 
+		}
+		CLI_StringToUpper(commandBuffer,commandBuffer);
+		CLI_CommandItem * item = CLI_GetMenuItemByCommandName(commandBuffer);
+		if(item){
+			item->callback(args);
+		} else {
+			if (0 == strcmp(commandBuffer,"?")) {
+				USART_WriteString("\n\r");
+				CLI_PrintAllCommands();
+			}
+		}
+	}
 }
 
 bool CLI_AddCommand(CLI_CommandItem *item){
 	if(item->callback==NULL||item->commandName==NULL){
 	return false;
 	}
+	if(head==NULL){
+		head=item;}
 	else{
 		CLI_CommandItem *temp = head;
 		while(!(temp->next == NULL)){
 			temp = temp->next;
 		}
 		temp->next = item;
-		return true;
+		
 	}
+	return true;
 	
 }
 
 void CLI_PrintAllCommands(void){
-	while(head!=0)
+	CLI_CommandItem *temp = head;
+	while(temp!=NULL)
 	{
-		USART_WriteString(head->commandName);
-		USART_WriteString("n\r");
-		USART_WriteString(head->description);
-		USART_WriteString("n\r");
-		head--;
+		USART_WriteString(temp->commandName);
+		USART_WriteString("\n\r");	
+		temp = temp->next;
 	}
 }
 
 CLI_CommandItem* CLI_GetMenuItemByCommandName(char *command){
-	//todo
+	CLI_CommandItem* item;
+	item = head;
+	while(item != NULL && strcmp(item->commandName, command)){
+		item = item->next;
+	}
 	
-	return NULL;
+	return item;
 };
 
-void CLI_StringToLower(char *dst, const char *src){
-	//todo proszÄ? wykorzystaÄ? funkcje z biblioteki ctype.h
+void CLI_StringToUpper(char *dst, const char *src){
+	int i = 0;
+	while(*(src+i)){
+	*(dst+i)=toupper(*(src+i));
+		i++;
+	}
 }
 
 bool CLI_StoreCommand(){
-	//todo
+	
+	char c;
+	static int index;
+	
+	if(USART_GetChar(&c)){
+		USART_PutChar(c);
+		if(c=='\n'||c=='\r'){
+			commandBuffer[index] = 0;
+			index = 0;
+			USART_WriteString("\n\r");
+			return true;
+		}
+		else if(c == 127)
+		{
+			if (index > 0) {
+				index--;
+			}
+		}
+		else
+		{
+			commandBuffer[index++] = c;
+		}
+	}
 	
 	return false;
-}
-
-void commandLED(char *param){
-    
 }
